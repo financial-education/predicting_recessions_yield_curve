@@ -1,0 +1,11 @@
+
+
+
+We'll use the methods in this paper \cite{estrella2006yield} to predict recession via the yield curve.
+
+
+#+begin_src R :session *rec* :results none :exports code
+library(quantmod)
+library(highcharter)
+#+end_src
+
