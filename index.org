@@ -1,11 +1,59 @@
+#+title: An Introduction to Predicting Recessions
+#+author: Matt Brigida, Ph.D.
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+#+HTML_HEAD: <style>pre.src{background:#343131;color:white;} </style>
+#+PROPERTY: header-args
+#+bibliography: references.bib
+
+* Overview
+
+We'll use the methods in this paper [cite:@estrella2006yield;] to predict recession via the yield curve.  The model uses a long minus short-term interest rate spread as the single input variable.  The spread is calculated using Treasury yields and is the 10 year minus the 3 month.  We'll pull Treasury yields via the FRED API.  The API codes are:
+
+|---------+-------|
+| 10 year | GS10  |
+| 3 month | TB3MS |
+|---------+-------|
 
 
-
-We'll use the methods in this paper \cite{estrella2006yield} to predict recession via the yield curve.
-
-
-#+begin_src R :session *rec* :results none :exports code
-library(quantmod)
-library(highcharter)
+#+begin_src python :session *rec* :results none :exports code
+import pandas as pd
+from fredapi import Fred
 #+end_src
 
+* Implementation
+
+The code below gathers the data.
+
+#+name: get_data
+#+begin_src python :session *rec* :results values :exports both :cache true
+key = pd.read_table("~/fred_api_key_pythoninfinance.txt")
+key = str(key.columns.values[0])
+fred = Fred(api_key=key)
+ten_yr = fred.get_series('GS10')
+three_mo = fred.get_series('TB3MS')
+data = pd.concat([ten_yr, three_mo], axis=1, join='inner')
+data.columns = ['long', 'short']
+data
+#+end_src
+
+#+RESULTS: get_data
+#+begin_example
+            long  short
+1953-04-01  2.83   2.19
+1953-05-01  3.05   2.16
+1953-06-01  3.11   2.11
+1953-07-01  2.93   2.04
+1953-08-01  2.95   2.04
+...          ...    ...
+2022-05-01  2.90   0.98
+2022-06-01  3.14   1.49
+2022-07-01  2.90   2.23
+2022-08-01  2.90   2.63
+2022-09-01  3.52   3.13
+
+[834 rows x 2 columns]
+#+end_example
+
+* References
+
+#+print_bibliography:
