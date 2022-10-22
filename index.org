@@ -22,6 +22,8 @@ from fredapi import Fred
 
 * Implementation
 
+** Data Preparation
+
 The code below gathers the data.
 
 #+name: get_data
@@ -53,6 +55,17 @@ data
 
 [834 rows x 2 columns]
 #+end_example
+
+** Model
+
+The predictive model is in a simple probit form:
+
+$$Rec_{t+12} = $$
+
+#+begin_src python :session *rec* :results values :exports both :cache true
+
+#+end_src
+
 
 * References
 
