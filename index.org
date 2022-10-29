@@ -18,6 +18,7 @@ We'll use the methods in this paper [cite:@estrella2006yield;] to predict recess
 #+begin_src python :session *rec* :results none :exports code
 import pandas as pd
 from fredapi import Fred
+from scipy import stats
 #+end_src
 
 * Implementation
@@ -60,10 +61,16 @@ data
 
 The predictive model is in a simple probit form:
 
-$$Rec_{t+12} = $$
+$$P(R_{t+12}) = F(\alpha + \beta S_t)$$
+
+where:
+
+- $F$ denotes the cumulative normal distribution function.
+- $S_t$ is the spread between short and long term interest rates at time /t/.
+- $\alpha$ and $\beta$ are estimated parameters.
 
 #+begin_src python :session *rec* :results values :exports both :cache true
-
+stats.norm.cdf()
 #+end_src
 
 
