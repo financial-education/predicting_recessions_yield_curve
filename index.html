@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2022-10-22 Sat 11:40 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>An Introduction to Predicting Recessions</title>
+<meta name="author" content="Matt Brigida, Ph.D." />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+<style>pre.src{background:#343131;color:white;} </style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        displayAlign: "center",
+        displayIndent: "0em",
+
+        "HTML-CSS": { scale: 100,
+                        linebreaks: { automatic: "false" },
+                        webFont: "TeX"
+                       },
+        SVG: {scale: 100,
+              linebreaks: { automatic: "false" },
+              font: "TeX"},
+        NativeMML: {scale: 100},
+        TeX: { equationNumbers: {autoNumber: "AMS"},
+               MultLineWidth: "85%",
+               TagSide: "right",
+               TagIndent: ".8em"
+             }
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">An Introduction to Predicting Recessions</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org988bac0">1. Overview</a></li>
+<li><a href="#orgacc0969">2. Implementation</a>
+<ul>
+<li><a href="#org967f99e">2.1. Data Preparation</a></li>
+<li><a href="#orga91456f">2.2. Model</a></li>
+</ul>
+</li>
+<li><a href="#org29ce14d">3. References</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org988bac0" class="outline-2">
+<h2 id="org988bac0"><span class="section-number-2">1.</span> Overview</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+We'll use the methods in this paper (Estrella, Arturo and Trubin, Mary, 2006) to predict recession via the yield curve.  The model uses a long minus short-term interest rate spread as the single input variable.  The spread is calculated using Treasury yields and is the 10 year minus the 3 month.  We'll pull Treasury yields via the FRED API.  The API codes are:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">10 year</td>
+<td class="org-left">GS10</td>
+</tr>
+
+<tr>
+<td class="org-left">3 month</td>
+<td class="org-left">TB3MS</td>
+</tr>
+</tbody>
+</table>
+
+
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #c099ff;">import</span> pandas <span style="color: #c099ff;">as</span> pd
+<span style="color: #c099ff;">from</span> fredapi <span style="color: #c099ff;">import</span> Fred
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgacc0969" class="outline-2">
+<h2 id="orgacc0969"><span class="section-number-2">2.</span> Implementation</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-org967f99e" class="outline-3">
+<h3 id="org967f99e"><span class="section-number-3">2.1.</span> Data Preparation</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+The code below gathers the data.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org870174d"><span style="color: #ff98a4;">key</span> = pd.read_table(<span style="color: #c3e88d;">"~/fred_api_key_pythoninfinance.txt"</span>)
+<span style="color: #ff98a4;">key</span> = <span style="color: #c099ff;">str</span>(key.columns.values[0])
+<span style="color: #ff98a4;">fred</span> = Fred(api_key=key)
+ten_yr = fred.get_series(<span style="color: #c3e88d;">'GS10'</span>)
+three_mo = fred.get_series(<span style="color: #c3e88d;">'TB3MS'</span>)
+data = pd.concat([ten_yr, three_mo], axis=1, join=<span style="color: #c3e88d;">'inner'</span>)
+data.columns = [<span style="color: #c3e88d;">'long'</span>, <span style="color: #c3e88d;">'short'</span>]
+data
+</pre>
+</div>
+
+<pre class="example" id="orgf243bca">
+            long  short
+1953-04-01  2.83   2.19
+1953-05-01  3.05   2.16
+1953-06-01  3.11   2.11
+1953-07-01  2.93   2.04
+1953-08-01  2.95   2.04
+...          ...    ...
+2022-05-01  2.90   0.98
+2022-06-01  3.14   1.49
+2022-07-01  2.90   2.23
+2022-08-01  2.90   2.63
+2022-09-01  3.52   3.13
+
+[834 rows x 2 columns]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orga91456f" class="outline-3">
+<h3 id="orga91456f"><span class="section-number-3">2.2.</span> Model</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+The predictive model is in a simple probit form:
+</p>
+
+<p>
+\[P(R_{t+12}) = F(\alpha + \beta S_t)\]
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python">
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org29ce14d" class="outline-2">
+<h2 id="org29ce14d"><span class="section-number-2">3.</span> References</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Estrella, Arturo and Trubin, Mary (2006). <i>The yield curve as a leading indicator: Some practical issues</i>, Current issues in Economics and Finance.</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Matt Brigida, Ph.D.</p>
+<p class="date">Created: 2022-10-22 Sat 11:40</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
